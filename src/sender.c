@@ -38,8 +38,7 @@ static unsigned int exp_distrib(unsigned int delay)
 	// number between 0 and 1
 	double r = (double)rand() / (double) RAND_MAX;
 	if(r == 0.0) return 0; // FIXME not correct; what do to?
-	int d = (unsigned int) (-log(r)/((double)delay/1000000.0));
-	//printf("delay: %d log: %f, r: %f d: %d %f\n", delay, -log(r), r,  d, (-log(r)/(double)delay));
+	int d = (unsigned int) (-log(r)/((double)delay/2000000.0));
 	return d;
 }
 
