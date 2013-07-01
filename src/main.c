@@ -10,6 +10,7 @@
 #include <signal.h>
 
 #include "options.h"
+#include "sender.h"
 
 static struct options opt;
 
@@ -35,6 +36,8 @@ int main(int argc, char **argv)
 
 	if(initialise_options(&opt, argc, argv) < 0)
 		return 1;
+
+	send_loop(&opt);
 
 	destroy_options(&opt);
 	return 0;

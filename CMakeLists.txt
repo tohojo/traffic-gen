@@ -7,9 +7,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wno-long-long")
 
 set(traffic-gen_SOURCES
   src/main.c
-  src/options.c)
+  src/options.c
+  src/sender.c)
 set(traffic-gen_HEADERS
-  include/options.h)
+  include/options.h
+  include/sender.h)
 
 include_directories(include/)
 

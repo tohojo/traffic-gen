@@ -5,7 +5,6 @@
  * 2013-06-04
  */
 
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include "options.h"
@@ -31,12 +30,13 @@ void destroy_options(struct options *opt)
 {
 	if(!opt->initialised)
 		return;
+	close(opt->socket);
 	opt->initialised = 0;
 }
 
 static void usage(const char *name)
 {
-	fprintf(stderr, "Usage: %s [-l <length>] [-r <bps>] [-o <outfile>] <destination>\n", name);
+	fprintf(stderr, "Usage: %s [-46] [-l <length>] [-r <bps>] [-o <outfile>] <destination>\n", name);
 }
 
 
@@ -45,10 +45,17 @@ int parse_options(struct options *opt, int argc, char **argv)
 	int o;
 	int val;
 	FILE *output;
+	struct addrinfo hints = {0};
 	struct addrinfo *result;
 
-	while((o = getopt(argc, argv, "hl:o:r:")) != -1) {
+	while((o = getopt(argc, argv, "46hl:o:r:")) != -1) {
 		switch(o) {
+		case '4':
+			hints.ai_family = AF_INET;
+			break;
+		case '6':
+			hints.ai_family = AF_INET6;
+			break;
 		case 'l':
 			val = atoi(optarg);
 			if(val < 1) {
@@ -86,15 +93,20 @@ int parse_options(struct options *opt, int argc, char **argv)
 			break;
 		}
 	}
-	if(argc < 2) {
+	if(optind >= argc) {
 		usage(argv[0]);
 		return -1;
 	}
-	if((val = getaddrinfo(argv[1], NULL, NULL, &result)) != 0) {
-		fprintf(stderr, "Unable to lookup address '%s': %s\n", argv[1], gai_strerror(val));
+	if((val = getaddrinfo(argv[optind], NULL, &hints, &result)) != 0) {
+		fprintf(stderr, "Unable to lookup address '%s': %s\n", argv[optind], gai_strerror(val));
 		return -1;
 	}
-	memcpy(&opt->destination, result, sizeof(struct addrinfo));
+	memcpy(&opt->dest, result, sizeof(struct addrinfo));
 	freeaddrinfo(result);
+	opt->socket = socket(opt->dest.ai_family, SOCK_DGRAM, PF_UNSPEC);
+	if(opt->socket == -1) {
+		perror("Unable to open socket");
+		return -1;
+	}
 	return 0;
 }

@@ -14,7 +14,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <errno.h>
-
+#include <stdio.h>
 
 
 struct options {
@@ -23,7 +23,8 @@ struct options {
 	int rate;
 	struct timeval start_time;
 	FILE *output;
-	struct addrinfo destination;
+	struct addrinfo dest;
+	int socket;
 };
 
 int initialise_options(struct options *opt, int argc, char **argv);
