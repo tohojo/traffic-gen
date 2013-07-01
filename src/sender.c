@@ -46,8 +46,8 @@ void send_loop(struct options *opt)
 	do {
 		schedule_next(opt, &now, &next);
 		while(now.tv_sec < next.tv_sec || now.tv_usec < next.tv_usec) {
-			if(next.tv_usec - now.tv_usec > 10000)
-				usleep(10000);
+			if(next.tv_usec - now.tv_usec > USLEEP_THRESHOLD)
+				usleep(USLEEP_THRESHOLD);
 			gettimeofday(&now, NULL);
 		}
 		set_port(&opt->dest, gen_port());
