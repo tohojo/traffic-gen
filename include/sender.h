@@ -10,7 +10,8 @@
 
 #include "options.h"
 
-#define DEST_PORT 10001
+#define PORT_START 10000
+#define PORT_RANGE 1000
 
 void send_loop(struct options *opt);
 
