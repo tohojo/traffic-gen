@@ -18,4 +18,4 @@ include_directories(include/)
 add_executable(traffic-gen
   ${traffic-gen_HEADERS}
   ${traffic-gen_SOURCES})
-target_link_libraries(traffic-gen)
+target_link_libraries(traffic-gen m)

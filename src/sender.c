@@ -6,6 +6,7 @@
  */
 
 #include <stdlib.h>
+#include <math.h>
 #include "sender.h"
 
 static void set_port(struct addrinfo *addr, unsigned short port)
@@ -30,12 +31,26 @@ static unsigned int calc_delay(int family, int rate)
 	return 1000000 / (rate/size);
 }
 
-static void schedule_next(struct options *opt, struct timeval *now, struct timeval *next)
+static unsigned int exp_distrib(unsigned int delay)
 {
+	// Draw a new delay from the exponential distribution with mean delay
+	// set to the parameter. Calculated by -ln(r)/delay where r is a random
+	// number between 0 and 1
+	double r = (double)rand() / (double) RAND_MAX;
+	if(r == 0.0) return 0; // FIXME not correct; what do to?
+	int d = (unsigned int) (-log(r)/((double)delay/1000000.0));
+	//printf("delay: %d log: %f, r: %f d: %d %f\n", delay, -log(r), r,  d, (-log(r)/(double)delay));
+	return d;
+}
+
+static void schedule_next(unsigned int delay, char poisson, struct timeval *now, struct timeval *next)
+{
+	if(poisson)
+		delay = exp_distrib(delay);
 	next->tv_sec = now->tv_sec;
-	next->tv_usec = now->tv_usec + calc_delay(opt->dest.ai_family, opt->rate);
+	next->tv_usec = now->tv_usec + delay;
 	if(next->tv_usec > 1000000) {
-		next->tv_sec++;
+		next->tv_sec += next->tv_usec / 1000000;
 		next->tv_usec %= 1000000;
 	}
 }
@@ -44,6 +59,7 @@ void send_loop(struct options *opt)
 {
 	struct timeval now, next, stop;
 	char msg[PAYLOAD] = {0};
+	unsigned int delay = calc_delay(opt->dest.ai_family, opt->rate);
 
 	gettimeofday(&now, NULL);
 	stop.tv_sec = now.tv_sec + opt->run_length;
@@ -51,7 +67,7 @@ void send_loop(struct options *opt)
 	srand(now.tv_sec ^ now.tv_usec);
 	printf("Size: %d\n", OVERHEAD(opt->dest.ai_family) + PAYLOAD);
 	do {
-		schedule_next(opt, &now, &next);
+		schedule_next(delay, opt->poisson, &now, &next);
 		while(now.tv_sec < next.tv_sec || now.tv_usec < next.tv_usec) {
 			if(next.tv_usec - now.tv_usec > USLEEP_THRESHOLD)
 				usleep(USLEEP_THRESHOLD);

@@ -17,6 +17,7 @@ int initialise_options(struct options *opt, int argc, char **argv)
 	opt->run_length = 60;
 	opt->output = stdout;
 	opt->rate = 10000;
+	opt->poisson = 1;
 	gettimeofday(&opt->start_time, NULL);
 
 	if(parse_options(opt, argc, argv) < 0)
@@ -37,7 +38,7 @@ void destroy_options(struct options *opt)
 
 static void usage(const char *name)
 {
-	fprintf(stderr, "Usage: %s [-46] [-l <length>] [-r <bps>] [-o <outfile>] <destination>\n", name);
+	fprintf(stderr, "Usage: %s [-46P] [-l <length>] [-r <bps>] [-o <outfile>] <destination>\n", name);
 }
 
 
@@ -49,7 +50,7 @@ int parse_options(struct options *opt, int argc, char **argv)
 	struct addrinfo hints = {0};
 	struct addrinfo *result;
 
-	while((o = getopt(argc, argv, "46hl:o:r:")) != -1) {
+	while((o = getopt(argc, argv, "46hl:o:Pr:")) != -1) {
 		switch(o) {
 		case '4':
 			hints.ai_family = AF_INET;
@@ -64,6 +65,9 @@ int parse_options(struct options *opt, int argc, char **argv)
 				return -1;
 			}
 			opt->run_length = val;
+			break;
+		case 'P':
+			opt->poisson = 0;
 			break;
 		case 'o':
 			if(opt->output != stdout) {
