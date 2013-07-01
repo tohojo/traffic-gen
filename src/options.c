@@ -16,6 +16,7 @@ int initialise_options(struct options *opt, int argc, char **argv)
 {
 	opt->run_length = 60;
 	opt->output = stdout;
+	opt->rate = 10000;
 	gettimeofday(&opt->start_time, NULL);
 
 	if(parse_options(opt, argc, argv) < 0)
@@ -84,7 +85,7 @@ int parse_options(struct options *opt, int argc, char **argv)
 				fprintf(stderr, "Invalid rate: %d\n", val);
 				return -1;
 			}
-			opt->rate = val;
+			opt->rate = val/8;
 			break;
 		case 'h':
 		default:

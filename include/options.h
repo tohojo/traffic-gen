@@ -20,7 +20,7 @@
 struct options {
 	char initialised;
 	int run_length;
-	int rate;
+	int rate; // stored in bytes/sec, user inputs bits/sec
 	struct timeval start_time;
 	FILE *output;
 	struct addrinfo dest;

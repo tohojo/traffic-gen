@@ -24,10 +24,16 @@ static unsigned short gen_port()
 	return PORT_START + rand() % PORT_RANGE;
 }
 
+static unsigned int calc_delay(int family, int rate)
+{
+	int size = OVERHEAD(family) + PAYLOAD;
+	return 1000000 / (rate/size);
+}
+
 static void schedule_next(struct options *opt, struct timeval *now, struct timeval *next)
 {
 	next->tv_sec = now->tv_sec;
-	next->tv_usec = now->tv_usec + 50000;
+	next->tv_usec = now->tv_usec + calc_delay(opt->dest.ai_family, opt->rate);
 	if(next->tv_usec > 1000000) {
 		next->tv_sec++;
 		next->tv_usec %= 1000000;
@@ -37,12 +43,13 @@ static void schedule_next(struct options *opt, struct timeval *now, struct timev
 void send_loop(struct options *opt)
 {
 	struct timeval now, next, stop;
-	char msg = {0};
+	char msg[PAYLOAD] = {0};
 
 	gettimeofday(&now, NULL);
 	stop.tv_sec = now.tv_sec + opt->run_length;
 	stop.tv_usec = now.tv_usec;
 	srand(now.tv_sec ^ now.tv_usec);
+	printf("Size: %d\n", OVERHEAD(opt->dest.ai_family) + PAYLOAD);
 	do {
 		schedule_next(opt, &now, &next);
 		while(now.tv_sec < next.tv_sec || now.tv_usec < next.tv_usec) {
@@ -51,6 +58,6 @@ void send_loop(struct options *opt)
 			gettimeofday(&now, NULL);
 		}
 		set_port(&opt->dest, gen_port());
-		sendto(opt->socket, &msg, 1, 0, opt->dest.ai_addr, opt->dest.ai_addrlen);
+		sendto(opt->socket, msg, PAYLOAD, 0, opt->dest.ai_addr, opt->dest.ai_addrlen);
 	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);
 }
