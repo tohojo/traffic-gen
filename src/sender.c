@@ -27,9 +27,9 @@ static unsigned short gen_port()
 
 static unsigned int exp_distrib(unsigned int pps)
 {
-	// Draw a new delay from the exponential distribution with mean delay
-	// set to achieve pps packets/sec. Calculated by -ln(r)/pps where r is a
-	// random number between 0 and 1
+	// Draw a new delay (in usec) from the exponential distribution with
+	// mean delay set to achieve pps packets/sec. Calculated by -ln(r)/pps
+	// where r is a random number between 0 and 1
 	//
 	// Ref: https://en.wikipedia.org/wiki/Exponential_distribution#Generating_exponential_variates
 	double r;
