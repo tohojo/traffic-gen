@@ -24,7 +24,7 @@ struct options {
 	int rate; // stored in bytes/sec, user inputs bits/sec
 	struct timeval start_time;
 	FILE *output;
-	struct addrinfo dest;
+	struct addrinfo *dest;
 	int socket;
 };
 

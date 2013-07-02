@@ -59,7 +59,7 @@ void send_loop(struct options *opt)
 {
 	struct timeval now, next, stop;
 	char msg[PAYLOAD] = {0};
-	unsigned int pps = opt->rate / (OVERHEAD(opt->dest.ai_family) + PAYLOAD);
+	unsigned int pps = opt->rate / (OVERHEAD(opt->dest->ai_family) + PAYLOAD);
 
 	gettimeofday(&now, NULL);
 	stop.tv_sec = now.tv_sec + opt->run_length;
@@ -73,6 +73,6 @@ void send_loop(struct options *opt)
 			gettimeofday(&now, NULL);
 		}
 		set_port(&opt->dest, gen_port());
-		sendto(opt->socket, msg, PAYLOAD, 0, opt->dest.ai_addr, opt->dest.ai_addrlen);
+		sendto(opt->socket, msg, PAYLOAD, 0, opt->dest->ai_addr, opt->dest->ai_addrlen);
 	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);
 }

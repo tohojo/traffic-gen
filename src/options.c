@@ -33,6 +33,7 @@ void destroy_options(struct options *opt)
 	if(!opt->initialised)
 		return;
 	close(opt->socket);
+	freeaddrinfo(opt->dest);
 	opt->initialised = 0;
 }
 
@@ -106,9 +107,8 @@ int parse_options(struct options *opt, int argc, char **argv)
 		fprintf(stderr, "Unable to lookup address '%s': %s\n", argv[optind], gai_strerror(val));
 		return -1;
 	}
-	memcpy(&opt->dest, result, sizeof(struct addrinfo));
-	freeaddrinfo(result);
-	opt->socket = socket(opt->dest.ai_family, SOCK_DGRAM, PF_UNSPEC);
+	opt->dest = result;
+	opt->socket = socket(opt->dest->ai_family, SOCK_DGRAM, PF_UNSPEC);
 	if(opt->socket == -1) {
 		perror("Unable to open socket");
 		return -1;
