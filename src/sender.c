@@ -72,7 +72,7 @@ void send_loop(struct options *opt)
 				usleep(USLEEP_THRESHOLD);
 			gettimeofday(&now, NULL);
 		}
-		set_port(&opt->dest, gen_port());
+		set_port(opt->dest, gen_port());
 		sendto(opt->socket, msg, PAYLOAD, 0, opt->dest->ai_addr, opt->dest->ai_addrlen);
 	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);
 }
