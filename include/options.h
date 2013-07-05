@@ -21,7 +21,8 @@ struct options {
 	char initialised;
 	char poisson;
 	int run_length;
-	int rate; // stored in bytes/sec, user inputs bits/sec
+	int pps;
+	int pkt_size;
 	struct timeval start_time;
 	FILE *output;
 	struct addrinfo *dest;

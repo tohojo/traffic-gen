@@ -16,7 +16,9 @@ int initialise_options(struct options *opt, int argc, char **argv)
 {
 	opt->run_length = 60;
 	opt->output = stdout;
-	opt->rate = 10000;
+	// default rate is 1Mbps
+	opt->pps = 250;
+	opt->pkt_size = 500;
 	opt->poisson = 1;
 	gettimeofday(&opt->start_time, NULL);
 
@@ -51,13 +53,16 @@ int parse_options(struct options *opt, int argc, char **argv)
 	struct addrinfo hints = {0};
 	struct addrinfo *result;
 
-	while((o = getopt(argc, argv, "46hl:o:Pr:")) != -1) {
+	while((o = getopt(argc, argv, "46Dhl:o:p:r:s:")) != -1) {
 		switch(o) {
 		case '4':
 			hints.ai_family = AF_INET;
 			break;
 		case '6':
 			hints.ai_family = AF_INET6;
+			break;
+		case 'D':
+			opt->poisson = 0;
 			break;
 		case 'l':
 			val = atoi(optarg);
@@ -67,8 +72,14 @@ int parse_options(struct options *opt, int argc, char **argv)
 			}
 			opt->run_length = val;
 			break;
-		case 'P':
-			opt->poisson = 0;
+		case 'p':
+			// pps
+			val = atoi(optarg);
+			if(val < 1) {
+				fprintf(stderr, "Invalid pps value: %d\n", val);
+				return -1;
+			}
+			opt->pps = val;
 			break;
 		case 'o':
 			if(opt->output != stdout) {
@@ -90,7 +101,16 @@ int parse_options(struct options *opt, int argc, char **argv)
 				fprintf(stderr, "Invalid rate: %d\n", val);
 				return -1;
 			}
-			opt->rate = val/8;
+			opt->pps = (val/8)/opt->pkt_size;
+			break;
+		case 's':
+			// packet size
+			val = atoi(optarg);
+			if(val < 1 || val > 1514) {
+				fprintf(stderr, "Invalid packet size: %d\n", val);
+				return -1;
+			}
+			opt->pkt_size = val;
 			break;
 		case 'h':
 		default:

@@ -21,7 +21,8 @@
 #define OVERHEAD_UDP 8
 
 #define OVERHEAD(family) (OVERHEAD_ETHERNET + ((family == AF_INET) ? OVERHEAD_IP : OVERHEAD_IP6) + OVERHEAD_UDP)
-#define PAYLOAD 100
+#define PAYLOAD(family, size) (size-OVERHEAD(family))
+#define MAX_PAYLOAD (1514 - OVERHEAD(AF_INET6))
 
 void send_loop(struct options *opt);
 
