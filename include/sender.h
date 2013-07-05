@@ -11,7 +11,6 @@
 #include "options.h"
 
 #define PORT_START 10000
-#define PORT_RANGE 1000
 
 #define USLEEP_THRESHOLD 10000
 

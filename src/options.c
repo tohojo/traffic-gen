@@ -19,6 +19,7 @@ int initialise_options(struct options *opt, int argc, char **argv)
 	// default rate is 1Mbps
 	opt->pps = 250;
 	opt->pkt_size = 500;
+	opt->port_range = 1000;
 	opt->poisson = 1;
 	gettimeofday(&opt->start_time, NULL);
 
@@ -41,7 +42,7 @@ void destroy_options(struct options *opt)
 
 static void usage(const char *name)
 {
-	fprintf(stderr, "Usage: %s [-46P] [-l <length>] [-r <bps>] [-o <outfile>] <destination>\n", name);
+	fprintf(stderr, "Usage: %s [-46D] [-f <flows>] [-l <length>] [-p <pps>] [-r <bps> | -s <pkt_size>] <destination>\n", name);
 }
 
 
@@ -53,7 +54,7 @@ int parse_options(struct options *opt, int argc, char **argv)
 	struct addrinfo hints = {0};
 	struct addrinfo *result;
 
-	while((o = getopt(argc, argv, "46Dhl:o:p:r:s:")) != -1) {
+	while((o = getopt(argc, argv, "46Df:hl:o:p:r:s:")) != -1) {
 		switch(o) {
 		case '4':
 			hints.ai_family = AF_INET;
@@ -63,6 +64,15 @@ int parse_options(struct options *opt, int argc, char **argv)
 			break;
 		case 'D':
 			opt->poisson = 0;
+			break;
+		case 'f':
+			// pps
+			val = atoi(optarg);
+			if(val < 1) {
+				fprintf(stderr, "Invalid flows value: %d\n", val);
+				return -1;
+			}
+			opt->port_range = val;
 			break;
 		case 'l':
 			val = atoi(optarg);

@@ -23,6 +23,7 @@ struct options {
 	int run_length;
 	int pps;
 	int pkt_size;
+	int port_range;
 	struct timeval start_time;
 	FILE *output;
 	struct addrinfo *dest;

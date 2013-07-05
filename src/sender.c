@@ -22,9 +22,9 @@ static void set_port(struct addrinfo *addr, unsigned short port)
 	}
 }
 
-static unsigned short gen_port()
+static unsigned short gen_port(range)
 {
-	return PORT_START + rand() % PORT_RANGE;
+	return PORT_START + rand() % range;
 }
 
 static unsigned int exp_distrib(unsigned int pps)
@@ -96,7 +96,7 @@ void send_loop(struct options *opt)
 				usleep(USLEEP_THRESHOLD);
 			gettimeofday(&now, NULL);
 		}
-		set_port(opt->dest, gen_port());
+		set_port(opt->dest, gen_port(opt->port_range));
 		sendto(opt->socket, msg, payload, 0, opt->dest->ai_addr, opt->dest->ai_addrlen);
 	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);
 }
