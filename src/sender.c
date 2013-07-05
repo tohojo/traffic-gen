@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <sys/socket.h>
+#include <netdb.h>
 #include "sender.h"
 
 static void set_port(struct addrinfo *addr, unsigned short port)
@@ -62,6 +64,7 @@ void send_loop(struct options *opt)
 	char msg[MAX_PAYLOAD] = {0};
 	int overhead = OVERHEAD(opt->dest->ai_family);
 	int payload = opt->pkt_size - overhead;
+	char destaddr[INET6_ADDRSTRLEN];
 
 	if(payload < 0) {
 		fprintf(stderr, "Minimum packet size for selected host and address family is %d bytes\n",
@@ -69,6 +72,18 @@ void send_loop(struct options *opt)
 		return;
 	}
 
+	if((ret = getnameinfo(opt->dest->ai_addr, opt->dest->ai_addrlen,
+					destaddr, sizeof(destaddr),
+					NULL, 0,
+					NI_NUMERICHOST)) != 0) {
+		fprintf(stderr, "Error creating address string: %s\n", gai_strerror(ret));
+		return;
+	}
+
+	printf("Sending %d pps of size %d (%d+%d) bytes to %s for %d seconds.\n",
+		opt->pps, opt->pkt_size, payload, overhead,
+		destaddr,
+		opt->run_length);
 
 	gettimeofday(&now, NULL);
 	stop.tv_sec = now.tv_sec + opt->run_length;
