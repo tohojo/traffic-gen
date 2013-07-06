@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include "sender.h"
+#include "util.h"
 
 static void set_port(struct addrinfo *addr, unsigned short port)
 {
@@ -27,26 +28,38 @@ static unsigned short gen_port(range)
 	return PORT_START + rand() % range;
 }
 
-static unsigned int exp_distrib(unsigned int pps)
+static double exp_distrib(double mean)
 {
-	// Draw a new delay (in usec) from the exponential distribution with
-	// mean delay set to achieve pps packets/sec. Calculated by -ln(r)/pps
-	// where r is a random number between 0 and 1
+	// Draw a random value and create an exponentially distributed value
+	// from it. Calculated by -ln(r)/mean where r is a random number between
+	// 0 and 1
 	//
 	// Ref: https://en.wikipedia.org/wiki/Exponential_distribution#Generating_exponential_variates
 	double r;
 	do {
 		r = (double)rand() / (double) RAND_MAX;
-	} while(r == 0.0);
-	int d = (unsigned int) 1000000 * (-log(r)/((double)pps));
-	return d;
+	} while(r == 0.0); // log(0) is undefined
+	return -log(r)/mean;
+}
+
+static unsigned int exp_wait(unsigned int pps)
+{
+        // Exponential wait is an exponentially distributed value with mean set
+	// to achieve pps packets/sec.
+	return (unsigned int) 1000000 * exp_distrib(pps);
+}
+
+static unsigned int scale_payload(unsigned int size, unsigned int overhead)
+{
+	double scale = exp_distrib(1.0);
+	return min(max(overhead, (size * scale)-overhead), MAX_PAYLOAD);
 }
 
 static void schedule_next(unsigned int pps, char poisson, struct timeval *now, struct timeval *next)
 {
 	int delay;
 	if(poisson)
-		delay = exp_distrib(pps);
+		delay = exp_wait(pps);
 	else
 		delay = 1000000/pps;
 	next->tv_sec = now->tv_sec;
@@ -80,10 +93,12 @@ void send_loop(struct options *opt)
 		return;
 	}
 
-	printf("Sending %d pps of size %d (%d+%d) bytes to %s for %d seconds.\n",
+	printf("Sending %d pps of size %d (%d+%d) bytes to %s for %d seconds (%s).\n",
 		opt->pps, opt->pkt_size, payload, overhead,
 		destaddr,
-		opt->run_length);
+		opt->run_length,
+		opt->poisson ? "poisson" : "deterministic"
+		);
 
 	gettimeofday(&now, NULL);
 	stop.tv_sec = now.tv_sec + opt->run_length;
@@ -97,6 +112,8 @@ void send_loop(struct options *opt)
 			gettimeofday(&now, NULL);
 		}
 		set_port(opt->dest, gen_port(opt->port_range));
+		if(opt->poisson)
+			payload = scale_payload(opt->pkt_size, overhead);
 		sendto(opt->socket, msg, payload, 0, opt->dest->ai_addr, opt->dest->ai_addrlen);
 	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);
 }
