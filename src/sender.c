@@ -52,7 +52,7 @@ static unsigned int exp_wait(unsigned int pps)
 static unsigned int scale_payload(unsigned int size, unsigned int overhead)
 {
 	double scale = exp_distrib(1.0);
-	return min(max(overhead, (size * scale)-overhead), MAX_PAYLOAD);
+	return min(max(0, (size * scale)-overhead), MAX_PAYLOAD);
 }
 
 static void schedule_next(unsigned int pps, char poisson, struct timeval *now, struct timeval *next)
