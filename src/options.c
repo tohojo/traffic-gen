@@ -20,7 +20,7 @@ int initialise_options(struct options *opt, int argc, char **argv)
 	opt->pps = 250;
 	opt->pkt_size = 500;
 	opt->port_range = 1000;
-	opt->poisson = 1;
+	opt->poisson_interval = opt->poisson_packets = 1;
 	gettimeofday(&opt->start_time, NULL);
 
 	if(parse_options(opt, argc, argv) < 0)
@@ -42,7 +42,7 @@ void destroy_options(struct options *opt)
 
 static void usage(const char *name)
 {
-	fprintf(stderr, "Usage: %s [-46D] [-f <flows>] [-l <length>] [-p <pps>] [-r <bps> | -s <pkt_size>] <destination>\n", name);
+	fprintf(stderr, "Usage: %s [-46dD] [-f <flows>] [-l <length>] [-p <pps>] [-r <bps> | -s <pkt_size>] <destination>\n", name);
 }
 
 
@@ -54,7 +54,7 @@ int parse_options(struct options *opt, int argc, char **argv)
 	struct addrinfo hints = {0};
 	struct addrinfo *result;
 
-	while((o = getopt(argc, argv, "46Df:hl:o:p:r:s:")) != -1) {
+	while((o = getopt(argc, argv, "46dDf:hl:o:p:r:s:")) != -1) {
 		switch(o) {
 		case '4':
 			hints.ai_family = AF_INET;
@@ -63,7 +63,10 @@ int parse_options(struct options *opt, int argc, char **argv)
 			hints.ai_family = AF_INET6;
 			break;
 		case 'D':
-			opt->poisson = 0;
+			opt->poisson_interval = 0;
+			break;
+		case 'd':
+			opt->poisson_packets = 0;
 			break;
 		case 'f':
 			// pps

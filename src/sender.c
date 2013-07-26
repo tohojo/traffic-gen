@@ -97,7 +97,7 @@ void send_loop(struct options *opt)
 		opt->pps, opt->pkt_size, payload, overhead,
 		destaddr,
 		opt->run_length,
-		opt->poisson ? "poisson" : "deterministic"
+		opt->poisson_interval ? "poisson" : "deterministic"
 		);
 
 	gettimeofday(&now, NULL);
@@ -105,14 +105,14 @@ void send_loop(struct options *opt)
 	stop.tv_usec = now.tv_usec;
 	srand(now.tv_sec ^ now.tv_usec);
 	do {
-		schedule_next(opt->pps, opt->poisson, &now, &next);
+		schedule_next(opt->pps, opt->poisson_interval, &now, &next);
 		while(now.tv_sec < next.tv_sec || now.tv_usec < next.tv_usec) {
 			if(next.tv_usec - now.tv_usec > USLEEP_THRESHOLD)
 				usleep(USLEEP_THRESHOLD);
 			gettimeofday(&now, NULL);
 		}
 		set_port(opt->dest, gen_port(opt->port_range));
-		if(opt->poisson)
+		if(opt->poisson_packets)
 			payload = scale_payload(opt->pkt_size, overhead);
 		sendto(opt->socket, msg, payload, 0, opt->dest->ai_addr, opt->dest->ai_addrlen);
 	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);

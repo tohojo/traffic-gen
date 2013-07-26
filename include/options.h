@@ -19,7 +19,8 @@
 
 struct options {
 	char initialised;
-	char poisson;
+	char poisson_interval;
+	char poisson_packets;
 	int run_length;
 	int pps;
 	int pkt_size;
