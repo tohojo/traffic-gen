@@ -103,16 +103,18 @@ void send_loop(struct options *opt)
 	gettimeofday(&now, NULL);
 	stop.tv_sec = now.tv_sec + opt->run_length;
 	stop.tv_usec = now.tv_usec;
+	next.tv_sec = now.tv_sec;
+	next.tv_usec = now.tv_usec;
 	srand(now.tv_sec ^ now.tv_usec);
 	do {
 		if(opt->pps > 0) {
 			schedule_next(opt->pps, opt->poisson_interval, &now, &next);
-			while(now.tv_sec < next.tv_sec || now.tv_usec < next.tv_usec) {
-				if(next.tv_usec - now.tv_usec > USLEEP_THRESHOLD)
-					usleep(USLEEP_THRESHOLD);
-				gettimeofday(&now, NULL);
-			}
 		}
+		while(now.tv_sec < next.tv_sec || (now.tv_sec == next.tv_sec && now.tv_usec < next.tv_usec)) {
+			if(next.tv_usec - now.tv_usec > USLEEP_THRESHOLD)
+				usleep(USLEEP_THRESHOLD);
+		}
+		gettimeofday(&now, NULL);
 		set_port(opt->dest, gen_port(opt->port_range));
 		if(opt->poisson_packets)
 			payload = scale_payload(opt->pkt_size, overhead);
