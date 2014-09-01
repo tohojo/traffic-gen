@@ -88,7 +88,7 @@ int parse_options(struct options *opt, int argc, char **argv)
 		case 'p':
 			// pps
 			val = atoi(optarg);
-			if(val < 1) {
+			if(val < 0) {
 				fprintf(stderr, "Invalid pps value: %d\n", val);
 				return -1;
 			}
