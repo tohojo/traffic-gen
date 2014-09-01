@@ -115,5 +115,5 @@ void send_loop(struct options *opt)
 		if(opt->poisson_packets)
 			payload = scale_payload(opt->pkt_size, overhead);
 		sendto(opt->socket, msg, payload, 0, opt->dest->ai_addr, opt->dest->ai_addrlen);
-	} while(now.tv_sec < stop.tv_sec || now.tv_usec < stop.tv_usec);
+	} while(now.tv_sec < stop.tv_sec || (now.tv_sec == stop.tv_sec && now.tv_usec < stop.tv_usec));
 }
