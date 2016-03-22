@@ -20,6 +20,7 @@ int initialise_options(struct options *opt, int argc, char **argv)
 	opt->pps = 250;
 	opt->pkt_size = 500;
 	opt->port_range = 1000;
+	opt->tos = 0x0;
 	opt->poisson_interval = opt->poisson_packets = 1;
 	gettimeofday(&opt->start_time, NULL);
 
@@ -42,7 +43,7 @@ void destroy_options(struct options *opt)
 
 static void usage(const char *name)
 {
-	fprintf(stderr, "Usage: %s [-46dD] [-f <flows>] [-l <length>] [-p <pps>] [-r <bps> | -s <pkt_size>] <destination>\n", name);
+	fprintf(stderr, "Usage: %s [-46dD] [-f <flows>] [-l <length>] [-p <pps>] [-r <bps> | -s <pkt_size>] [-t <tos byte>] <destination>\n", name);
 }
 
 
@@ -54,7 +55,7 @@ int parse_options(struct options *opt, int argc, char **argv)
 	struct addrinfo hints = {0};
 	struct addrinfo *result;
 
-	while((o = getopt(argc, argv, "46dDf:hl:o:p:r:s:")) != -1) {
+	while((o = getopt(argc, argv, "46dDf:hl:o:p:r:s:t:")) != -1) {
 		switch(o) {
 		case '4':
 			hints.ai_family = AF_INET;
@@ -125,6 +126,15 @@ int parse_options(struct options *opt, int argc, char **argv)
 			}
 			opt->pkt_size = val;
 			break;
+		case 't':
+			// TOS byte
+			val = strtoul(optarg, NULL, 0);
+			if(val < 0 || val > 255) {
+				fprintf(stderr, "Invalid TOS byte value: 0x%x\n", val);
+				return -1;
+			}
+			opt->tos = val;
+			break;
 		case 'h':
 		default:
 			usage(argv[0]);
@@ -144,6 +154,11 @@ int parse_options(struct options *opt, int argc, char **argv)
 	opt->socket = socket(opt->dest->ai_family, SOCK_DGRAM, PF_UNSPEC);
 	if(opt->socket == -1) {
 		perror("Unable to open socket");
+		return -1;
+	}
+	if(opt->tos > 0 &&
+		setsockopt(opt->socket, IPPROTO_IP, IP_TOS, &opt->tos, sizeof(opt->tos))) {
+		perror("Unable to set TOS value");
 		return -1;
 	}
 	return 0;

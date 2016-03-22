@@ -25,6 +25,7 @@ struct options {
 	int pps;
 	int pkt_size;
 	int port_range;
+	unsigned char tos;
 	struct timeval start_time;
 	FILE *output;
 	struct addrinfo *dest;

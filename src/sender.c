@@ -23,7 +23,7 @@ static void set_port(struct addrinfo *addr, unsigned short port)
 	}
 }
 
-static unsigned short gen_port(range)
+static unsigned short gen_port(int range)
 {
 	return PORT_START + rand() % range;
 }
@@ -93,8 +93,8 @@ void send_loop(struct options *opt)
 		return;
 	}
 
-	printf("Sending %d pps of size %d (%d+%d) bytes to %s for %d seconds (%s).\n",
-		opt->pps, opt->pkt_size, payload, overhead,
+	printf("Sending %d pps of size %d (%d+%d) bytes with TOS 0x%x to %s for %d seconds (%s).\n",
+		opt->pps, opt->pkt_size, payload, overhead, opt->tos,
 		destaddr,
 		opt->run_length,
 		opt->poisson_interval ? "poisson" : "deterministic"
