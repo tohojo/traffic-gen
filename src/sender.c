@@ -8,7 +8,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/socket.h>
+#include <sys/random.h>
 #include <netdb.h>
+#include <limits.h>
 #include "sender.h"
 #include "util.h"
 
@@ -35,10 +37,13 @@ static double exp_distrib(double mean)
 	// 0 and 1
 	//
 	// Ref: https://en.wikipedia.org/wiki/Exponential_distribution#Generating_exponential_variates
+	unsigned int rand = 0;
+	ssize_t bytes;
 	double r;
-	do {
-		r = (double)rand() / (double) RAND_MAX;
-	} while(r == 0.0); // log(0) is undefined
+	bytes = getrandom(&rand, sizeof(rand), 0);
+	if (bytes == -1)
+		return 0;
+	r = (double)rand / (double)UINT_MAX;
 	return -log(r)/mean;
 }
 
@@ -105,7 +110,6 @@ void send_loop(struct options *opt)
 	stop.tv_usec = now.tv_usec;
 	next.tv_sec = now.tv_sec;
 	next.tv_usec = now.tv_usec;
-	srand(now.tv_sec ^ now.tv_usec);
 	do {
 		if(opt->pps > 0) {
 			schedule_next(opt->pps, opt->poisson_interval, &now, &next);
